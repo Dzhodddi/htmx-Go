@@ -85,7 +85,7 @@ func (s *UsersStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	defer cancel()
 
 	err := tx.QueryRowContext(ctx, query,
-		user.Username, user.Password, user.Email).Scan(
+		user.Username, user.Password.hash, user.Email).Scan(
 		&user.ID,
 		&user.CreatedAt)
 	if err != nil {
@@ -104,7 +104,7 @@ func (s *UsersStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 
 func (s *UsersStore) createUserInvitation(ctx context.Context,
 	tx *sql.Tx, token string, invitationExpr time.Duration, userID int64) error {
-	query := `INSERT INTO user_invitation (token, user_id, expiry) VALUES ($1, $2, $3);`
+	query := `INSERT INTO user_invetetions (token, user_id, expiry) VALUES ($1, $2, $3);`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDelay)
 	defer cancel()
