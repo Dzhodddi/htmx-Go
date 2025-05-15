@@ -15,6 +15,11 @@ type RegisterUserPayload struct {
 	Password string `json:"password" validate:"required,min=3,max=24"`
 }
 
+type UserWithToken struct {
+	*store.User
+	Token string `json:"token"`
+}
+
 // registerUserHandler Go docs
 //
 //	@Summary		Register a user
@@ -23,7 +28,7 @@ type RegisterUserPayload struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			payload	body		RegisterUserPayload	true	"User credentials"
-//	@Success		201		{object}	store.User			"User registered"
+//	@Success		201		{object}	UserWithToken		"User registered"
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Router			/authentication/user [post]
@@ -50,7 +55,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 	ctx := r.Context()
 	plainToken := uuid.New().String()
-	
+
 	hash := sha256.Sum256([]byte(plainToken))
 	hashedToken := hex.EncodeToString(hash[:])
 
@@ -66,8 +71,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-
-	if err := app.jsonResponse(w, http.StatusCreated, payload); err != nil {
+	userWithToken := &UserWithToken{
+		User:  user,
+		Token: plainToken,
+	}
+	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
