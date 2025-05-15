@@ -1,0 +1,3 @@
+ALTER TABLE
+    user_invetetions
+ADD COLUMN expiry TIMESTAMP(0) WITH TIME ZONE NOT NULL;
