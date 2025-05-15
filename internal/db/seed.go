@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -69,17 +70,19 @@ var commentsSlice = []string{
 	"// A simple poll to gather audience opinions on a specific topic.",
 }
 
-func Seed(store store.Storage) {
+func Seed(store store.Storage, db *sql.DB) {
 	ctx := context.Background()
 
 	users := generateUsers(100)
+	tx, _ := db.BeginTx(ctx, nil)
 	for _, i := range users {
-		if err := store.Users.Create(ctx, i); err != nil {
+		if err := store.Users.Create(ctx, tx, i); err != nil {
+			_ = tx.Rollback()
 			log.Println("Error creating user", err)
 
 		}
 	}
-
+	tx.Commit()
 	posts := generatePosts(200, users)
 	for _, i := range posts {
 		if err := store.Posts.Create(ctx, i); err != nil {
@@ -103,7 +106,6 @@ func generateUsers(num int) []*store.User {
 	for i := 0; i < num; i++ {
 		users[i] = &store.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
-			Password: "123123",
 			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
 		}
 	}
