@@ -17,6 +17,7 @@ func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Reques
 	data := map[string]string{
 		"status":  "OK",
 		"version": "1.0.0",
+		"env":     app.config.env,
 	}
 	if err := app.jsonResponse(w, http.StatusOK, data); err != nil {
 		app.internalServerError(w, r, err)
