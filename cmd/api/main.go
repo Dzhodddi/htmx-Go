@@ -2,9 +2,11 @@ package main
 
 import (
 	"go.uber.org/zap"
+	"project/internal/auth"
 	"project/internal/db"
 	"project/internal/env"
 	store2 "project/internal/store"
+	"time"
 )
 
 //	@title			Social site API
@@ -45,7 +47,13 @@ func main() {
 				user: env.GetString("AUTH_BASIC_USER", "admin"),
 				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
 			},
+			token: tokenConfig{
+				secret: env.GetString("TOKEN_SECRET", "secret"),
+				expiry: time.Hour * 24 * 3,
+				issuer: "Social API",
+			},
 		},
+
 		//mail: mailConfig{
 		//	exp:       time.Hour * 24 * 3,
 		//	fromEmail: env.GetString("FROM_EMAIL", "dima2006x@email.com"),
@@ -68,6 +76,9 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	// jwt auth
+	jwtAuth := auth.NewJWTAuth(cfg.auth.token.secret, cfg.auth.token.issuer, cfg.auth.token.issuer)
+
 	defer database.Close()
 	logger.Info("database initialized")
 	store := store2.NewStorage(database)
@@ -85,6 +96,7 @@ func main() {
 		store:  store,
 		logger: logger,
 		//mailer: mailtrap,
+		authenticator: jwtAuth,
 	}
 
 	mux := app.mount()

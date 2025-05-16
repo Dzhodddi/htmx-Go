@@ -60,7 +60,7 @@ func (s *UsersStore) CreateAndInvite(ctx context.Context, user *User, token stri
 }
 
 func (s *UsersStore) GetByID(ctx context.Context, id int64) (*User, error) {
-	query := `SELECT id, username, email, created_at FROM users WHERE id = $1`
+	query := `SELECT id, username, email, created_at FROM users WHERE id = $1 AND is_active = true`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDelay)
 	defer cancel()
 
@@ -229,4 +229,25 @@ func (s *UsersStore) delete(ctx context.Context, tx *sql.Tx, userID int64) error
 		return err
 	}
 	return nil
+}
+
+func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+	query := `SELECT id, username, email, password, is_active 
+	FROM users
+	WHERE email = $1 AND is_active = true`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDelay)
+	defer cancel()
+	user := &User{}
+	err := s.db.QueryRowContext(ctx, query, email).Scan(
+		&user.ID, &user.Username, &user.Email, &user.Password.hash, &user.IsActive)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return user, nil
 }

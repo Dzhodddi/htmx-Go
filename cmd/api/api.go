@@ -8,14 +8,16 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"project/docs"
+	authoticator "project/internal/auth"
 	"project/internal/store"
 	"time"
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	authenticator authoticator.Authenticator
 	//mailer mailer.Client
 }
 
@@ -37,6 +39,13 @@ type config struct {
 }
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret string
+	expiry time.Duration
+	issuer string
 }
 
 type basicConfig struct {
@@ -108,7 +117,9 @@ func (app *application) mount() http.Handler {
 		})
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
+
 	})
 
 	return r
