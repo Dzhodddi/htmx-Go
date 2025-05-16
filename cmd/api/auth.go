@@ -75,6 +75,29 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		User:  user,
 		Token: plainToken,
 	}
+	//isProdEnv := app.config.env == "production"
+	//activationURL := fmt.Sprintf("%s/confirm/%s", app.config.frontendURL, plainToken)
+	//vars := struct {
+	//	Username      string
+	//	ActivationURL string
+	//}{
+	//	Username:      user.Username,
+	//	ActivationURL: activationURL,
+	//}
+	//var _ int64
+	//_, err = app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
+	//if err != nil {
+	//	app.logger.Errorw("Error sending welcome email", "error", err)
+	//
+	//	//rollback if email fails
+	//	if err := app.store.Users.Delete(ctx, user.ID); err != nil {
+	//		app.logger.Errorw("Error deleting user", "error", err)
+	//		app.internalServerError(w, r, err)
+	//	}
+	//	app.internalServerError(w, r, err)
+	//	return
+	//}
+
 	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		app.internalServerError(w, r, err)
 	}

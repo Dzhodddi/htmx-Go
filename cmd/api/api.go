@@ -16,6 +16,7 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	//mailer mailer.Client
 }
 
 type dbConfig struct {
@@ -31,11 +32,20 @@ type config struct {
 	env    string
 	apiURL string
 	mail   mailConfig
+	//frontendURL string
 }
 
 type mailConfig struct {
-	exp time.Duration
+	exp       time.Duration
+	fromEmail string
 }
+
+//type mailTrapConfig struct {
+//	apiKey string
+//}
+//type sendGridConfig struct {
+//	apiKey string
+//}
 
 func (app *application) run(mux http.Handler) error {
 
