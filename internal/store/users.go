@@ -60,13 +60,13 @@ func (s *UsersStore) CreateAndInvite(ctx context.Context, user *User, token stri
 }
 
 func (s *UsersStore) GetByID(ctx context.Context, id int64) (*User, error) {
-	query := `SELECT id, username, email, created_at FROM users WHERE id = $1 AND is_active = true`
+	query := `SELECT id, username, email, password, created_at FROM users WHERE id = $1 AND is_active = true`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDelay)
 	defer cancel()
 
 	user := &User{}
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
-		&user.ID, &user.Username, &user.Email, &user.CreatedAt)
+		&user.ID, &user.Username, &user.Email, &user.Password.hash, &user.CreatedAt)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
