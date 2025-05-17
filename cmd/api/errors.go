@@ -5,6 +5,11 @@ import (
 	"project/internal/store"
 )
 
+func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
+	app.logger.Warnw("Forbidden", "method", r.Method, "path", r.URL.Path)
+	writeJSON(w, http.StatusForbidden, "forbidden error")
+}
+
 func (app *application) unAuthResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("unauth error", "method", r.Method, "path", r.URL.Path, "err", err.Error())
 	writeJSON(w, http.StatusUnauthorized, "unauthorized")

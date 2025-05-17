@@ -10,12 +10,14 @@ import (
 	"project/docs"
 	authoticator "project/internal/auth"
 	"project/internal/store"
+	"project/internal/store/cache"
 	"time"
 )
 
 type application struct {
 	config        config
 	store         store.Storage
+	cacheStorage  cache.Storage
 	logger        *zap.SugaredLogger
 	authenticator authoticator.Authenticator
 	//mailer mailer.Client
@@ -36,7 +38,16 @@ type config struct {
 	mail   mailConfig
 	auth   authConfig
 	//frontendURL string
+	redisConfig redisConfig
 }
+
+type redisConfig struct {
+	addr     string
+	password string
+	db       int
+	enabled  bool
+}
+
 type authConfig struct {
 	basic basicConfig
 	token tokenConfig
@@ -99,8 +110,10 @@ func (app *application) mount() http.Handler {
 			r.Route("/{postId}", func(r chi.Router) {
 				r.Use(app.postsContextMiddleware)
 				r.Get("/", app.getPostHandler)
-				r.Delete("/", app.deletePostHandler)
-				r.Patch("/", app.patchPostHandler)
+				r.Delete("/", app.checkPostOwnership(
+					"admin", app.deletePostHandler))
+				r.Patch("/", app.checkPostOwnership(
+					"moderator", app.patchPostHandler))
 			})
 		})
 

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"project/internal/auth"
 	"project/internal/db"
 	"project/internal/env"
 	store2 "project/internal/store"
+	cache "project/internal/store/cache"
 	"time"
 )
 
@@ -40,6 +42,12 @@ func main() {
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+		},
+		redisConfig: redisConfig{
+			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
+			password: env.GetString("REDIS_PASSWORD", ""),
+			db:       env.GetInt("REDIS_DB", 0),
+			enabled:  true,
 		},
 		env: env.GetString("ENV", "development"),
 		auth: authConfig{
@@ -83,6 +91,14 @@ func main() {
 	logger.Info("database initialized")
 	store := store2.NewStorage(database)
 
+	//redis
+	var cacheRedis *redis.Client
+	if cfg.redisConfig.enabled {
+		cacheRedis = cache.NewRedisClient(cfg.redisConfig.addr, cfg.redisConfig.password, cfg.redisConfig.db)
+		logger.Info("cache initialized")
+	}
+	cacheStorage := cache.NewRedisStorage(cacheRedis)
+
 	// email
 	//mailerConfig := mailer.NewSendGridMailer(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
@@ -92,9 +108,10 @@ func main() {
 	//}
 
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
+		config:       cfg,
+		store:        store,
+		cacheStorage: cacheStorage,
+		logger:       logger,
 		//mailer: mailtrap,
 		authenticator: jwtAuth,
 	}

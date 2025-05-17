@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"project/internal/store"
 	"strconv"
 	"strings"
 )
@@ -72,7 +73,7 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		ctx := r.Context()
-		user, err := app.store.Users.GetByID(ctx, userId)
+		user, err := app.getUserFromCache(ctx, userId)
 		if err != nil {
 			app.unAuthResponse(w, r, err)
 			return
@@ -80,4 +81,61 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, userCtx, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (app *application) checkPostOwnership(role string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getUserFromContext(r)
+		post := getPostFromCtx(r)
+		// check if it's user's posts
+		if post.UserId == user.ID {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		//check the role for user
+		//app.logger.Info(user.Role)
+		allowed, err := app.checkRole(r.Context(), user, role)
+		//app.logger.Info(allowed)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		if !allowed {
+			app.forbiddenResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
+func (app *application) checkRole(ctx context.Context, user *store.User, requiredRole string) (bool, error) {
+	role, err := app.store.Roles.GetByName(ctx, requiredRole)
+
+	if err != nil {
+		return false, err
+	}
+	//app.logger.Info(user.Role.Level, role.Level, requiredRole)
+	return user.Role.Level >= role.Level, nil
+}
+
+func (app *application) getUserFromCache(ctx context.Context, userID int64) (*store.User, error) {
+	if !app.config.redisConfig.enabled {
+		return app.store.Users.GetByID(ctx, userID)
+	}
+	user, err := app.cacheStorage.Users.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		user, err = app.store.Users.GetByID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
+			return nil, err
+		}
+	}
+	return user, nil
 }
