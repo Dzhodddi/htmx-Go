@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"project/internal/auth"
@@ -9,6 +10,7 @@ import (
 	ratelimiter "project/internal/ratelimiter"
 	store2 "project/internal/store"
 	cache "project/internal/store/cache"
+	"runtime"
 	"time"
 )
 
@@ -126,7 +128,14 @@ func main() {
 		authenticator: jwtAuth,
 		rateLimiter:   fixedRateLimiter,
 	}
-
+	// Metrics collected
+	expvar.NewString("version").Set(version)
+	expvar.Publish("database", expvar.Func(func() any {
+		return database.Stats()
+	}))
+	expvar.Publish("Go routines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
 	mux := app.mount()
 	logger.Fatal(app.run(mux))
 }
