@@ -1,35 +1,21 @@
-name: Update Version and Release
-on:
-  push:
-    branches:
-      - main
+- uses: actions/checkout@v2
 
-permissions:
-  contents: write
+- name: Extract latest version from CHANGELOG.md
+  id: get_version
+  run: |
+    VERSION=$(grep -oP '\[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
+    echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-jobs:
-  update-version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+- name: Update version in cmd/api/main.go
+  run: |
+    VERSION="${{ steps.get_version.outputs.VERSION }}"
+    sed -i.bak "s/var version = \".*\"/var version = \"$VERSION\"/" cmd/api/main.go
+    rm cmd/api/main.go.bak
 
-      - name: Extract latest version from CHANGELOG.md
-        id: get_version
-        run: |
-          VERSION=$(grep -oP '\[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update version in cmd/api/main.go
-        run: |
-          VERSION="${{ steps.get_version.outputs.VERSION }}"
-          sed -i.bak "s/var version = \".*\"/var version = \"$VERSION\"/" cmd/api/main.go
-          rm cmd/api/main.go.bak
-
-
-      - name: Commit and push if changed
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git add cmd/api/main.go
-          git commit -m "Update version to ${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
-          git push
+- name: Commit and push if changed
+  run: |
+    git config --global user.email "action@github.com"
+    git config --global user.name "GitHub Action"
+    git add cmd/api/main.go
+    git diff --quiet || git commit -m "Update version to ${{ steps.get_version.outputs.VERSION }}"
+    git push
