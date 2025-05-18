@@ -88,13 +88,12 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
-	// jwt auth
-	jwtAuth := auth.NewJWTAuth(cfg.auth.token.secret, cfg.auth.token.issuer, cfg.auth.token.issuer)
-
 	defer database.Close()
 	logger.Info("database initialized")
 	store := store2.NewStorage(database)
+
+	// jwt auth
+	jwtAuth := auth.NewJWTAuth(cfg.auth.token.secret, cfg.auth.token.issuer, cfg.auth.token.issuer)
 
 	//redis
 	var cacheRedis *redis.Client
