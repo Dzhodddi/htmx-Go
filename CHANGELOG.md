@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Dzhodddi/htmx-Go/compare/v1.1.0...v1.1.1) (2025-05-18)
+
+
+### Bug Fixes
+
+* update version ([94a7161](https://github.com/Dzhodddi/htmx-Go/commit/94a7161a752c981a971891454e96fb708e2bd36e))
+
 ## [1.1.0](https://github.com/Dzhodddi/htmx-Go/compare/v1.0.0...v1.1.0) (2025-05-18)
 
 
