@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/Dzhodddi/htmx-Go/compare/v1.0.0...v1.1.0) (2025-05-18)
+
+
+### Features
+
+* update api version automatically ([ef831fa](https://github.com/Dzhodddi/htmx-Go/commit/ef831fa16fdd56aaafb2c879eea4380d0afdab26))
+
 ## 1.0.0 (2025-05-18)
 
 
