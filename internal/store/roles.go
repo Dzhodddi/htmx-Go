@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"database/sql"
-	"log"
 )
 
 type RolesStorage struct {
@@ -19,7 +18,6 @@ type Role struct {
 
 func (s *RolesStorage) GetByName(ctx context.Context, name string) (*Role, error) {
 	query := `SELECT id, name, description, level FROM roles WHERE name = $1`
-	log.Printf(name)
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDelay)
 	defer cancel()
 	role := &Role{}
@@ -28,6 +26,5 @@ func (s *RolesStorage) GetByName(ctx context.Context, name string) (*Role, error
 	if err != nil {
 		return nil, err
 	}
-	log.Printf(role.Level)
 	return role, nil
 }

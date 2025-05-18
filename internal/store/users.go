@@ -160,9 +160,8 @@ func (s *UsersStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, toke
 	SELECT u.id, u.username, u.email, u.created_at, u.is_active
 	FROM users u
 	JOIN user_invetetions ui ON u.id = ui.user_id
-	WHERE ui.token = $1 AND ui.expiry > $2
+	WHERE ui.token = $1 AND ui.expiry <= $2
 	`
-
 	hash := sha256.Sum256([]byte(token))
 	hashToken := hex.EncodeToString(hash[:])
 
@@ -176,7 +175,6 @@ func (s *UsersStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, toke
 		&user.Email,
 		&user.CreatedAt,
 		&user.IsActive)
-
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:

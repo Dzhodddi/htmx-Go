@@ -151,7 +151,6 @@ func (app *application) unFollowUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Router			/users/activate/{token} [put]
 func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
-
 	err := app.store.Users.Activate(r.Context(), token)
 	if err != nil {
 		switch err {
