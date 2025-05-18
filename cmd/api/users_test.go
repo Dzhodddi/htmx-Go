@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetUser(t *testing.T) {
-	app := newTestApp(t)
+	app := newTestApp(t, config{})
 	mux := app.mount()
 	testToken, _ := app.authenticator.GenerateToken(nil)
 	t.Run("should now allowed unath requests",

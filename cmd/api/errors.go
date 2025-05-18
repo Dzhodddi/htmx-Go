@@ -5,6 +5,12 @@ import (
 	"project/internal/store"
 )
 
+func (app *application) rateLimitExceeededResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
+	app.logger.Warnf("rate limit exceeded", "method", r.Method, "url", r.URL.Path)
+	w.Header().Set("Retry-After", retryAfter)
+	writeJSON(w, http.StatusTooManyRequests, "Rate limit exceeded, retry after: "+retryAfter)
+}
+
 func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
 	app.logger.Warnw("Forbidden", "method", r.Method, "path", r.URL.Path)
 	writeJSON(w, http.StatusForbidden, "forbidden error")

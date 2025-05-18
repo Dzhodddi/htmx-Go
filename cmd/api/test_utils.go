@@ -5,22 +5,26 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"project/internal/auth"
+	"project/internal/ratelimiter"
 	"project/internal/store"
 	"project/internal/store/cache"
 	"testing"
 )
 
-func newTestApp(t *testing.T) *application {
+func newTestApp(t *testing.T, cfg config) *application {
 	t.Helper()
 	mockStore := store.NewMockStore()
 	mockCache := cache.NewMockCacheStorage()
 	testAuth := &auth.TestAuth{}
 	logger := zap.NewNop().Sugar()
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(cfg.rateLimiter.RequestPerTimeFrame, cfg.rateLimiter.TimeFrame)
 	return &application{
 		logger:        logger,
 		store:         mockStore,
 		cacheStorage:  mockCache,
 		authenticator: testAuth,
+		config:        cfg,
+		rateLimiter:   rateLimiter,
 	}
 }
 

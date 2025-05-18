@@ -6,6 +6,7 @@ import (
 	"project/internal/auth"
 	"project/internal/db"
 	"project/internal/env"
+	ratelimiter "project/internal/ratelimiter"
 	store2 "project/internal/store"
 	cache "project/internal/store/cache"
 	"time"
@@ -47,7 +48,7 @@ func main() {
 			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			password: env.GetString("REDIS_PASSWORD", ""),
 			db:       env.GetInt("REDIS_DB", 0),
-			enabled:  true,
+			enabled:  false,
 		},
 		env: env.GetString("ENV", "development"),
 		auth: authConfig{
@@ -61,7 +62,11 @@ func main() {
 				issuer: "Social API",
 			},
 		},
-
+		rateLimiter: ratelimiter.Config{
+			RequestPerTimeFrame: 20,
+			TimeFrame:           time.Second * 5,
+			Enabled:             true,
+		},
 		//mail: mailConfig{
 		//	exp:       time.Hour * 24 * 3,
 		//	fromEmail: env.GetString("FROM_EMAIL", "dima2006x@email.com"),
@@ -99,6 +104,12 @@ func main() {
 	}
 	cacheStorage := cache.NewRedisStorage(cacheRedis)
 
+	// rate limiter
+	fixedRateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 	// email
 	//mailerConfig := mailer.NewSendGridMailer(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
@@ -114,6 +125,7 @@ func main() {
 		logger:       logger,
 		//mailer: mailtrap,
 		authenticator: jwtAuth,
+		rateLimiter:   fixedRateLimiter,
 	}
 
 	mux := app.mount()
