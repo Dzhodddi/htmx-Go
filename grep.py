@@ -8,14 +8,14 @@ class CodebaseGrepToolInput(BaseModel):
     file_extension: Optional[str] = Field(description="The file extension to search for (optional).")
     case_sensitive: bool = Field(default=False, description="Whether the search should be case sensitive.")
 class CodebaseGrepTool(BaseTool):
-    name: str = "codebase_grep_tool"
-    description: str = "Searches a given directory for a regex pattern using Python's re and os modules."
+    name: str = "codebase_grep"
+    description: str = "Search a given directory for a regex pattern using Python's re and os modules."
     args_schema: type[BaseModel] = CodebaseGrepToolInput
 
     def _run(self, search_directory: str, pattern: str, file_extension: Optional[str] = None, case_sensitive: bool = False) -> str:
         try:
             ignored_directories = ['.git', 'node_modules', 'venv', '.venv', '__pycache__']
-            results = []
+            matches = []
             for root, dirs, files in os.walk(search_directory):
                 for file in files:
                     if file_extension and not file.endswith(file_extension):
@@ -25,11 +25,11 @@ class CodebaseGrepTool(BaseTool):
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
                             if re.search(pattern, content, re.MULTILINE | (not case_sensitive and re.IGNORECASE)):
-                                results.append(file_path)
+                                matches.append((file_path, content))
                     except UnicodeDecodeError:
                         pass
-                    if len(results) >= 100:
+                    if len(matches) >= 100:
                         break
-            return str(results)
+            return str(matches)
         except Exception as e:
-            return f"Error executing codebase_grep_tool: {str(e)}"
+            return f"Error executing codebase_grep: {str(e)}"
