@@ -45,10 +45,8 @@ class CodebaseGrepTool(BaseTool):
                     if file_extension and not file.endswith(file_extension):
                         continue
                     
-                    # Construct file path
-                    file_path = os.path.join(root, file)
-                    
                     # Open and read the file
+                    file_path = os.path.join(root, file)
                     try:
                         with open(file_path, 'r') as f:
                             content = f.read()
