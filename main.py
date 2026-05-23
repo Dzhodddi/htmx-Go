@@ -1,0 +1,1 @@
+print("Hello, World!")\n# To run this project:\n# 1. Install Python\n# 2. Execute: python main.py
